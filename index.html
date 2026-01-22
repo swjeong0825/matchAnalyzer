@@ -1,504 +1,718 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Dynamic Tables and JSON Generator</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        /* Base Styles */
-        body {
-            display: flex;
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-            min-height: 100vh;
-            box-sizing: border-box;
-            background-color: #f0f2f5;
-        }
-        .container {
-            display: flex;
-            width: 100%;
-            height: 100%;
-        }
-        .left, .right {
-            padding: 20px;
-            overflow-y: auto;
-        }
-        .left {
-            width: 50%;
-            border-right: 2px solid #ccc;
-        }
-        .right {
-            width: 50%;
-        }
-        .controls, .submit-container {
-            margin-bottom: 20px;
-        }
-        .controls button, .submit-container button {
-            margin-right: 10px;
-            padding: 10px 15px;
-            font-size: 14px;
-            cursor: pointer;
-            border: none;
-            background-color: #007BFF;
-            color: white;
-            border-radius: 4px;
-            transition: background-color 0.3s ease;
-        }
-        .controls button:hover, .submit-container button:hover {
-            background-color: #0056b3;
-        }
-        .table-container {
-            margin-bottom: 30px;
-            border: 1px solid #ddd;
-            padding: 10px;
-            position: relative;
-            background-color: #fff;
-            border-radius: 4px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .table-controls {
-            margin-bottom: 10px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 10px;
-        }
-        th, td {
-            border: 1px solid #aaa;
-            padding: 8px;
-            text-align: center;
-        }
-        th {
-            background-color: #f7f7f7;
-        }
-        input {
-            width: 95%;
-            padding: 5px;
-            box-sizing: border-box;
-            text-align: center;
-            text-transform: lowercase; /* Visually transform input to lowercase */
-            border: 1px solid #ccc;
-            border-radius: 3px;
-            transition: border-color 0.3s ease, background-color 0.3s ease;
-        }
-        input:focus {
-            border-color: #007BFF;
-            outline: none;
-            background-color: #eef;
-        }
-        .json-output {
-            white-space: pre-wrap;
-            background-color: #f9f9f9;
-            padding: 15px;
-            border: 1px solid #ddd;
-            height: 70%;
-            overflow-y: auto;
-            font-family: Consolas, monospace;
-            border-radius: 4px;
-        }
-        .error {
-            border-color: red !important;
-            background-color: #ffe6e6 !important;
-        }
-        .error-message {
-            color: red;
-            margin-top: 10px;
-        }
-        .success-message {
-            color: green;
-            margin-top: 10px;
-        }
+  <meta charset="UTF-8" />
+  <title>Dynamic Tables, Player List, and JSON Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      min-height: 100vh;
+      background-color: #f0f2f5;
+    }
 
-        /* Responsive Styles */
-        @media (max-width: 768px) {
-            .container {
-                flex-direction: column;
-            }
-            .left, .right {
-                width: 100%;
-                border-right: none;
-                border-bottom: 2px solid #ccc;
-            }
-            .right {
-                border-bottom: none;
-            }
-            .controls button, .submit-container button {
-                width: 48%;
-                margin-bottom: 10px;
-            }
-            .table-controls button {
-                width: 48%;
-            }
-        }
+    .container {
+      display: flex;
+      width: 100%;
+      min-height: 100vh;
+    }
 
-        @media (max-width: 480px) {
-            .controls button, .submit-container button, .table-controls button {
-                width: 100%;
-                margin-right: 0;
-            }
-            th, td {
-                padding: 6px;
-            }
-            input {
-                width: 90%;
-                padding: 4px;
-            }
-            .json-output {
-                height: 60%;
-                padding: 10px;
-            }
-        }
-    </style>
+    .panel {
+      padding: 20px;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+
+    .left {
+      flex: 2.2;
+      border-right: 2px solid #ccc;
+    }
+
+    .middle {
+      flex: 1.4;
+      border-right: 2px solid #ccc;
+    }
+
+    .right {
+      flex: 1.0;
+    }
+
+    .controls, .submit-container, .player-controls {
+      margin-bottom: 20px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 10px 15px;
+      font-size: 14px;
+      cursor: pointer;
+      border: none;
+      background-color: #007BFF;
+      color: white;
+      border-radius: 4px;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .table-container {
+      margin-bottom: 30px;
+      border: 1px solid #ddd;
+      padding: 10px;
+      background-color: #fff;
+      border-radius: 4px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .table-controls {
+      margin-bottom: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 10px;
+    }
+
+    th, td {
+      border: 1px solid #aaa;
+      padding: 8px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #f7f7f7;
+    }
+
+    input {
+      width: 95%;
+      padding: 5px;
+      box-sizing: border-box;
+      text-align: center;
+      text-transform: lowercase;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      transition: border-color 0.3s ease, background-color 0.3s ease;
+    }
+
+    input:focus {
+      border-color: #007BFF;
+      outline: none;
+      background-color: #eef;
+    }
+
+    .error {
+      border-color: red !important;
+      background-color: #ffe6e6 !important;
+    }
+
+    .missing-players {
+      border: 1px dashed #bbb;
+      background: #fafafa;
+      padding: 10px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    .missing-players .title {
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 4px 8px;
+      border: 1px solid #ddd;
+      background: #fff;
+      border-radius: 999px;
+      margin: 2px 6px 2px 0;
+      font-family: Consolas, monospace;
+      font-size: 12px;
+    }
+
+    .muted {
+      color: #666;
+    }
+
+    .json-output {
+      white-space: pre-wrap;
+      background-color: #f9f9f9;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      overflow-y: auto;
+      font-family: Consolas, monospace;
+      height: 72vh;
+    }
+
+    .player-textarea {
+      width: 100%;
+      min-height: 220px;
+      resize: vertical;
+      padding: 10px;
+      box-sizing: border-box;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      font-family: Consolas, monospace;
+      font-size: 13px;
+    }
+
+    .message {
+      margin-top: 10px;
+      font-size: 13px;
+    }
+
+    .error-message {
+      color: red;
+      margin-top: 10px;
+      font-size: 13px;
+    }
+
+    .success-message {
+      color: green;
+      margin-top: 10px;
+      font-size: 13px;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .container {
+        flex-direction: column;
+      }
+      .left, .middle {
+        border-right: none;
+        border-bottom: 2px solid #ccc;
+      }
+      .right {
+        border-bottom: none;
+      }
+      .json-output {
+        height: 50vh;
+      }
+    }
+
+    @media (max-width: 480px) {
+      button {
+        width: 100%;
+      }
+      input {
+        width: 90%;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="left">
-            <div class="controls">
-                <button id="addTableBtn">Add Table</button>
-                <button id="removeTableBtn">Remove Table</button>
-            </div>
-            <div id="tablesArea">
-                <!-- Tables will be dynamically added here -->
-            </div>
-        </div>
-        <div class="right">
-            <h2>JSON Output</h2>
-            <div class="submit-container">
-                <button id="submitBtn">Submit</button>
-                <div class="error-message" id="errorMessage"></div>
-                <div class="success-message" id="successMessage"></div>
-            </div>
-            <div class="json-output" id="jsonOutput">
-                {/* JSON will be displayed here */}
-            </div>
-        </div>
+  <div class="container">
+    <!-- Left: Match tables -->
+    <div class="panel left">
+      <div class="controls">
+        <button id="addTableBtn">Add Table</button>
+        <button id="removeTableBtn">Remove Table</button>
+      </div>
+      <div id="tablesArea"></div>
     </div>
 
-    <script>
-        // Initialize variables
-        const tablesArea = document.getElementById('tablesArea');
-        const addTableBtn = document.getElementById('addTableBtn');
-        const removeTableBtn = document.getElementById('removeTableBtn');
-        const submitBtn = document.getElementById('submitBtn');
-        const jsonOutput = document.getElementById('jsonOutput');
-        const errorMessage = document.getElementById('errorMessage');
-        const successMessage = document.getElementById('successMessage');
+    <!-- Middle: JSON output -->
+    <div class="panel middle">
+      <h2>JSON Output</h2>
+      <div class="submit-container">
+        <button id="submitBtn">Submit</button>
+      </div>
+      <div class="error-message" id="errorMessage"></div>
+      <div class="success-message" id="successMessage"></div>
+      <div class="json-output" id="jsonOutput">{ /* JSON will be displayed here */ }</div>
+    </div>
 
-        let tableCount = 0;
+    <!-- Right: Player list -->
+    <div class="panel right">
+      <div class="player-controls">
+        <button type="button" id="playerListLabel" style="background-color:#f7f7f7;color:#111;border:1px solid #ccc;">Player List</button>
+        <div style="flex: 1;"></div>
+        <button id="savePlayersBtn">Save</button>
+      </div>
 
-        // Function to create a new table
-        function createTable() {
-            tableCount++;
-            const tableContainer = document.createElement('div');
-            tableContainer.classList.add('table-container');
-            tableContainer.setAttribute('data-table-id', tableCount);
+      <div class="muted" style="margin-bottom:10px;">
+        One per line: <code>playerName,rating</code> (example: <code>player1,3.5</code>)
+      </div>
 
-            // Table controls
-            const tableControls = document.createElement('div');
-            tableControls.classList.add('table-controls');
-            const addRowBtn = document.createElement('button');
-            addRowBtn.textContent = 'Add Row';
-            const removeRowBtn = document.createElement('button');
-            removeRowBtn.textContent = 'Remove Row';
-            tableControls.appendChild(addRowBtn);
-            tableControls.appendChild(removeRowBtn);
-            tableContainer.appendChild(tableControls);
+      <textarea id="playerList" class="player-textarea" placeholder="player1,3.5\nplayer2,4.0\nplayer3,3.0"></textarea>
+      <div class="error-message" id="playerErrorMessage"></div>
+      <div class="success-message" id="playerSuccessMessage"></div>
+    </div>
+  </div>
 
-            // Create table
-            const table = document.createElement('table');
-            const thead = document.createElement('thead');
-            const headerRow = document.createElement('tr');
-            for(let i=1; i<=4; i++) {
-                const th = document.createElement('th');
-                th.textContent = `Column ${i}`;
-                headerRow.appendChild(th);
+  <script>
+    // -----------------------------
+    // Existing app refs
+    // -----------------------------
+    const tablesArea = document.getElementById('tablesArea');
+    const addTableBtn = document.getElementById('addTableBtn');
+    const removeTableBtn = document.getElementById('removeTableBtn');
+    const submitBtn = document.getElementById('submitBtn');
+    const jsonOutput = document.getElementById('jsonOutput');
+    const errorMessage = document.getElementById('errorMessage');
+    const successMessage = document.getElementById('successMessage');
+
+    // Player list refs
+    const playerListTextarea = document.getElementById('playerList');
+    const savePlayersBtn = document.getElementById('savePlayersBtn');
+    const playerErrorMessage = document.getElementById('playerErrorMessage');
+    const playerSuccessMessage = document.getElementById('playerSuccessMessage');
+
+    const PLAYER_STORAGE_KEY = 'savedPlayersV1';
+
+    let tableCount = 0;
+    let savedPlayers = {}; // { [playerNameLower]: { rating: number } }
+
+    // -----------------------------
+    // Helpers
+    // -----------------------------
+    function isAlphanumeric(str) {
+      return /^[a-z0-9]+$/i.test(str);
+    }
+
+    function normalizeName(name) {
+      return name.trim().toLowerCase();
+    }
+
+    function getSavedPlayerEntriesSorted() {
+      return Object.keys(savedPlayers)
+        .sort()
+        .map(name => ({ name, rating: savedPlayers[name].rating }));
+    }
+
+    function renderSavedPlayersToTextarea() {
+      const lines = getSavedPlayerEntriesSorted().map(p => `${p.name},${p.rating}`);
+      playerListTextarea.value = lines.join('\n');
+    }
+
+    function loadSavedPlayersFromStorage() {
+      try {
+        const raw = localStorage.getItem(PLAYER_STORAGE_KEY);
+        if (!raw) {
+          savedPlayers = {};
+          return;
+        }
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') {
+          // minimal validation
+          const next = {};
+          Object.keys(parsed).forEach(k => {
+            const name = normalizeName(k);
+            const rating = parsed[k] && typeof parsed[k].rating === 'number' ? parsed[k].rating : undefined;
+            if (name && isAlphanumeric(name) && Number.isFinite(rating)) {
+              next[name] = { rating };
             }
-            thead.appendChild(headerRow);
-            table.appendChild(thead);
+          });
+          savedPlayers = next;
+        } else {
+          savedPlayers = {};
+        }
+      } catch (e) {
+        savedPlayers = {};
+      }
+    }
 
-            const tbody = document.createElement('tbody');
-            // Create initial 4 rows
-            for(let i=0; i<4; i++) {
-                const row = createRow();
-                tbody.appendChild(row);
-            }
-            table.appendChild(tbody);
-            tableContainer.appendChild(table);
-            tablesArea.appendChild(tableContainer);
+    function parsePlayersFromTextarea(text) {
+      const lines = text.split(/\r?\n/);
+      const next = {};
+      const errors = [];
 
-            // Event listeners for add/remove row
-            addRowBtn.addEventListener('click', () => {
-                const newRow = createRow();
-                tbody.appendChild(newRow);
-            });
+      lines.forEach((line, idx) => {
+        const rowNum = idx + 1;
+        const trimmed = line.trim();
+        if (!trimmed) return;
 
-            removeRowBtn.addEventListener('click', () => {
-                if(tbody.rows.length > 0) {
-                    tbody.deleteRow(tbody.rows.length -1);
-                }
-            });
+        const parts = trimmed.split(',');
+        if (parts.length < 2) {
+          errors.push(`Line ${rowNum}: expected "name,rating"`);
+          return;
         }
 
-        // Function to create a table row
-        function createRow() {
-            const tr = document.createElement('tr');
-            for(let i=0; i<4; i++) {
-                const td = document.createElement('td');
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.maxLength = 20;
-                input.addEventListener('input', validateInput);
-                tr.appendChild(td);
-                td.appendChild(input);
-            }
-            return tr;
+        const rawName = parts[0].trim();
+        const rawRating = parts.slice(1).join(',').trim();
+        const name = normalizeName(rawName);
+
+        if (!name) {
+          errors.push(`Line ${rowNum}: missing player name`);
+          return;
         }
 
-        // Function to validate input for alphanumeric
-        function validateInput(e) {
-            const input = e.target;
-            const value = input.value;
-            const alphanumeric = /^[a-z0-9]+$/i;
-            if(value && !alphanumeric.test(value)) {
+        if (!isAlphanumeric(name)) {
+          errors.push(`Line ${rowNum}: player name must be alphanumeric (a-z, 0-9)`);
+          return;
+        }
+
+        const rating = Number.parseFloat(rawRating);
+        if (!Number.isFinite(rating)) {
+          errors.push(`Line ${rowNum}: rating must be a number (example: 3.5)`);
+          return;
+        }
+
+        if (next[name]) {
+          errors.push(`Line ${rowNum}: duplicate player "${name}"`);
+          return;
+        }
+
+        next[name] = { rating };
+      });
+
+      return { players: next, errors };
+    }
+
+    function savePlayersToStorage(playersObj) {
+      localStorage.setItem(PLAYER_STORAGE_KEY, JSON.stringify(playersObj));
+    }
+
+    // -----------------------------
+    // Missing players UI
+    // -----------------------------
+    function updateMissingPlayersForTable(tableContainer) {
+      const box = tableContainer.querySelector('.missing-players');
+      if (!box) return;
+
+      const saved = getSavedPlayerEntriesSorted();
+      if (saved.length === 0) {
+        box.innerHTML = `
+          <div class="title">Players not included in this match table</div>
+          <div class="muted">No players saved yet. Add players on the right and click Save.</div>
+        `;
+        return;
+      }
+
+      // Option A: any non-empty cell counts as "used", regardless of row validity.
+      const used = new Set();
+      const inputs = tableContainer.querySelectorAll('input');
+      inputs.forEach(input => {
+        const v = normalizeName(input.value || '');
+        if (v) used.add(v);
+      });
+
+      const missing = saved.filter(p => !used.has(p.name));
+
+      if (missing.length === 0) {
+        box.innerHTML = `
+          <div class="title">Players not included in this match table</div>
+          <div class="muted">All saved players appear in this table.</div>
+        `;
+        return;
+      }
+
+      const pills = missing
+        .map(p => `<span class="pill">${p.name},${p.rating}</span>`)
+        .join('');
+
+      box.innerHTML = `
+        <div class="title">Players not included in this match table (${missing.length})</div>
+        <div>${pills}</div>
+      `;
+    }
+
+    function updateMissingPlayersForAllTables() {
+      const allTableContainers = tablesArea.querySelectorAll('.table-container');
+      allTableContainers.forEach(tc => updateMissingPlayersForTable(tc));
+    }
+
+    // -----------------------------
+    // Table creation
+    // -----------------------------
+    function createRow() {
+      const tr = document.createElement('tr');
+      for (let i = 0; i < 4; i++) {
+        const td = document.createElement('td');
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.maxLength = 20;
+        input.addEventListener('input', (e) => {
+          validateInput(e);
+          const tableContainer = e.target.closest('.table-container');
+          if (tableContainer) updateMissingPlayersForTable(tableContainer);
+        });
+        td.appendChild(input);
+        tr.appendChild(td);
+      }
+      return tr;
+    }
+
+    function createTable() {
+      tableCount++;
+      const tableContainer = document.createElement('div');
+      tableContainer.classList.add('table-container');
+      tableContainer.setAttribute('data-table-id', tableCount);
+
+      // Table controls
+      const tableControls = document.createElement('div');
+      tableControls.classList.add('table-controls');
+      const addRowBtn = document.createElement('button');
+      addRowBtn.textContent = 'Add Row';
+      const removeRowBtn = document.createElement('button');
+      removeRowBtn.textContent = 'Remove Row';
+      tableControls.appendChild(addRowBtn);
+      tableControls.appendChild(removeRowBtn);
+      tableContainer.appendChild(tableControls);
+
+      // Create table
+      const table = document.createElement('table');
+      const thead = document.createElement('thead');
+      const headerRow = document.createElement('tr');
+      for (let i = 1; i <= 4; i++) {
+        const th = document.createElement('th');
+        th.textContent = `Column ${i}`;
+        headerRow.appendChild(th);
+      }
+      thead.appendChild(headerRow);
+      table.appendChild(thead);
+
+      const tbody = document.createElement('tbody');
+      // initial 4 rows (kept from original behavior)
+      for (let i = 0; i < 4; i++) {
+        tbody.appendChild(createRow());
+      }
+      table.appendChild(tbody);
+      tableContainer.appendChild(table);
+
+      // Missing players box (NEW)
+      const missingBox = document.createElement('div');
+      missingBox.classList.add('missing-players');
+      tableContainer.appendChild(missingBox);
+
+      tablesArea.appendChild(tableContainer);
+
+      // Event listeners for add/remove row
+      addRowBtn.addEventListener('click', () => {
+        tbody.appendChild(createRow());
+        updateMissingPlayersForTable(tableContainer);
+      });
+
+      removeRowBtn.addEventListener('click', () => {
+        if (tbody.rows.length > 0) {
+          tbody.deleteRow(tbody.rows.length - 1);
+          updateMissingPlayersForTable(tableContainer);
+        }
+      });
+
+      updateMissingPlayersForTable(tableContainer);
+    }
+
+    function validateInput(e) {
+      const input = e.target;
+      const value = (input.value || '').trim();
+      if (value && !isAlphanumeric(value)) {
+        input.classList.add('error');
+      } else {
+        input.classList.remove('error');
+      }
+    }
+
+    // -----------------------------
+    // Existing JSON generator (kept, with minimal changes)
+    // -----------------------------
+    function generateJSON() {
+      const jsonData = {};
+
+      const allTables = tablesArea.querySelectorAll('.table-container table tbody');
+      let totalProcessedRows = 0;
+      let totalSkippedRows = 0;
+
+      allTables.forEach(tbody => {
+        // Collect completed rows
+        const completedRows = [];
+        const cellValueCount = {}; // To check duplicates
+
+        Array.from(tbody.rows).forEach(row => {
+          const inputs = Array.from(row.querySelectorAll('input'));
+          const cells = inputs.map(input => (input.value || '').trim().toLowerCase());
+
+          // Check if row is completed
+          const isCompleted = cells.every(cell => cell !== '');
+          if (!isCompleted) {
+            // Incomplete rows are ignored
+            return;
+          }
+
+          // Check if all cells are alphanumeric
+          const isRowAlphanumeric = cells.every(cell => isAlphanumeric(cell));
+          if (!isRowAlphanumeric) {
+            inputs.forEach(input => {
+              const v = (input.value || '').trim();
+              if (v !== '' && !isAlphanumeric(v)) {
                 input.classList.add('error');
+              }
+            });
+            totalSkippedRows++;
+            return;
+          }
+
+          // Collect cell values for duplication check (per-table)
+          cells.forEach(cell => {
+            if (cellValueCount[cell]) {
+              cellValueCount[cell].count += 1;
+              cellValueCount[cell].rows.push(row);
             } else {
-                input.classList.remove('error');
+              cellValueCount[cell] = { count: 1, rows: [row] };
             }
-        }
+          });
 
-        // Function to add initial table on page load
-        window.onload = () => {
-            createTable();
-        };
-
-        // Event listeners for adding/removing tables
-        addTableBtn.addEventListener('click', createTable);
-        removeTableBtn.addEventListener('click', () => {
-            if(tablesArea.children.length > 0) {
-                tablesArea.removeChild(tablesArea.lastChild);
-            }
+          completedRows.push({ row, cells });
         });
 
-        // Function to generate JSON based on tables
-        function generateJSON() {
-            const jsonData = {};
-
-            const allTables = tablesArea.querySelectorAll('.table-container table tbody');
-            let totalProcessedRows = 0;
-            let totalSkippedRows = 0;
-
-            allTables.forEach(tbody => {
-                const table = tbody.parentElement;
-                const tableId = table.parentElement.getAttribute('data-table-id');
-
-                // Collect completed rows
-                const completedRows = [];
-                const cellValueCount = {}; // To check duplicates
-
-                Array.from(tbody.rows).forEach(row => {
-                    const inputs = Array.from(row.querySelectorAll('input'));
-                    const cells = inputs.map(input => input.value.trim().toLowerCase()); // Normalize to lower case
-
-                    // Check if row is completed
-                    const isCompleted = cells.every(cell => cell !== '');
-                    if(!isCompleted) {
-                        // Incomplete rows are ignored
-                        return;
-                    }
-
-                    // Check if all cells are alphanumeric
-                    const isAlphanumeric = cells.every(cell => /^[a-z0-9]+$/i.test(cell));
-                    if(!isAlphanumeric) {
-                        // Mark the entire row as invalid
-                        inputs.forEach(input => {
-                            if(input.value.trim() !== '' && !/^[a-z0-9]+$/i.test(input.value.trim())) {
-                                input.classList.add('error');
-                            }
-                        });
-                        totalSkippedRows++;
-                        return;
-                    }
-
-                    // Collect cell values for duplication check
-                    let hasDuplicate = false;
-                    cells.forEach(cell => {
-                        if(cellValueCount[cell]) {
-                            cellValueCount[cell].count +=1;
-                            cellValueCount[cell].rows.push(row);
-                        } else {
-                            cellValueCount[cell] = { count: 1, rows: [row] };
-                        }
-                    });
-
-                    completedRows.push({ row, cells });
-                });
-
-                // Identify duplicates
-                const duplicateCells = Object.keys(cellValueCount).filter(cell => cellValueCount[cell].count >1);
-                duplicateCells.forEach(cell => {
-                    cellValueCount[cell].rows.forEach(row => {
-                        const inputs = Array.from(row.querySelectorAll('input'));
-                        inputs.forEach(input => {
-                            if(input.value.trim().toLowerCase() === cell) {
-                                input.classList.add('error');
-                            }
-                        });
-                    });
-                });
-
-                // Count how many duplicate rows
-                const duplicateRows = new Set();
-                duplicateCells.forEach(cell => {
-                    cellValueCount[cell].rows.forEach(row => {
-                        duplicateRows.add(row);
-                    });
-                });
-                totalSkippedRows += duplicateRows.size;
-
-                // Process valid completed rows (excluding duplicates)
-                completedRows.forEach(({ row, cells }) => {
-                    if(duplicateRows.has(row)) {
-                        // This row has duplicates and is already marked as error
-                        return;
-                    }
-
-                    totalProcessedRows++;
-
-                    const [cell0, cell1, cell2, cell3] = cells;
-
-                    // Process cell0
-                    if(!jsonData[cell0]) {
-                        jsonData[cell0] = { "team": {}, "opponent": {} };
-                    }
-                    // Team relationship
-                    if(cell1) {
-                        if(!jsonData[cell0].team[cell1]) {
-                            jsonData[cell0].team[cell1] = 0;
-                        }
-                        jsonData[cell0].team[cell1]++;
-                    }
-                    // Opponent relationships
-                    [cell2, cell3].forEach(opponent => {
-                        if(opponent) {
-                            if(!jsonData[cell0].opponent[opponent]) {
-                                jsonData[cell0].opponent[opponent] = 0;
-                            }
-                            jsonData[cell0].opponent[opponent]++;
-                        }
-                    });
-
-                    // Process cell1
-                    if(!jsonData[cell1]) {
-                        jsonData[cell1] = { "team": {}, "opponent": {} };
-                    }
-                    // Team relationship
-                    if(cell0) {
-                        if(!jsonData[cell1].team[cell0]) {
-                            jsonData[cell1].team[cell0] = 0;
-                        }
-                        jsonData[cell1].team[cell0]++;
-                    }
-                    // Opponent relationships
-                    [cell2, cell3].forEach(opponent => {
-                        if(opponent) {
-                            if(!jsonData[cell1].opponent[opponent]) {
-                                jsonData[cell1].opponent[opponent] = 0;
-                            }
-                            jsonData[cell1].opponent[opponent]++;
-                        }
-                    });
-
-                    // Process cell2
-                    if(!jsonData[cell2]) {
-                        jsonData[cell2] = { "team": {}, "opponent": {} };
-                    }
-                    // Team relationship
-                    if(cell3) {
-                        if(!jsonData[cell2].team[cell3]) {
-                            jsonData[cell2].team[cell3] = 0;
-                        }
-                        jsonData[cell2].team[cell3]++;
-                    }
-
-                    // Opponent relationships
-                    [cell0, cell1].forEach(opponent => {
-                        if(opponent) {
-                            if(!jsonData[cell2].opponent[opponent]) {
-                                jsonData[cell2].opponent[opponent] = 0;
-                            }
-                            jsonData[cell2].opponent[opponent]++;
-                        }
-                    });
-
-
-                    // Process cell3
-                    if(!jsonData[cell3]) {
-                        jsonData[cell3] = { "team": {}, "opponent": {} };
-                    }
-                    // Team relationship
-                    if(cell2) {
-                        if(!jsonData[cell3].team[cell2]) {
-                            jsonData[cell3].team[cell2] = 0;
-                        }
-                        jsonData[cell3].team[cell2]++;
-                    }
-
-                    // Opponent relationships
-                    [cell0, cell1].forEach(opponent => {
-                        if(opponent) {
-                            if(!jsonData[cell3].opponent[opponent]) {
-                                jsonData[cell3].opponent[opponent] = 0;
-                            }
-                            jsonData[cell3].opponent[opponent]++;
-                        }
-                    });
-                });
+        // Identify duplicates
+        const duplicateCells = Object.keys(cellValueCount).filter(cell => cellValueCount[cell].count > 1);
+        duplicateCells.forEach(cell => {
+          cellValueCount[cell].rows.forEach(row => {
+            const inputs = Array.from(row.querySelectorAll('input'));
+            inputs.forEach(input => {
+              if ((input.value || '').trim().toLowerCase() === cell) {
+                input.classList.add('error');
+              }
             });
-
-            // Sort the top-level keys alphabetically
-            const sortedJsonData = {};
-            Object.keys(jsonData).sort().forEach(key => {
-                sortedJsonData[key] = jsonData[key];
-            });
-
-            return { data: sortedJsonData, processed: totalProcessedRows, skipped: totalSkippedRows };
-        }
-
-        // Function to handle Submit button click
-        submitBtn.addEventListener('click', () => {
-            // Clear previous error messages and success messages
-            errorMessage.textContent = '';
-            successMessage.textContent = '';
-            jsonOutput.textContent = '';
-
-            // Clear previous error highlights
-            const allInputs = tablesArea.querySelectorAll('input');
-            allInputs.forEach(input => {
-                input.classList.remove('error');
-            });
-
-            // Generate JSON
-            const result = generateJSON();
-
-            // Check if any errors were found (indicated by skipped rows)
-            if(result.skipped > 0) {
-                errorMessage.textContent = `Submission completed with ${result.skipped} skipped row(s) due to duplicates or invalid characters.`;
-            } else {
-                successMessage.textContent = 'Submission successful! All rows are valid.';
-            }
-
-            // Display JSON if there is any data
-            if(Object.keys(result.data).length > 0) {
-                jsonOutput.textContent = JSON.stringify(result.data, null, 4);
-            } else {
-                jsonOutput.textContent = '{}';
-            }
+          });
         });
-    </script>
+
+        // Count how many duplicate rows
+        const duplicateRows = new Set();
+        duplicateCells.forEach(cell => {
+          cellValueCount[cell].rows.forEach(row => {
+            duplicateRows.add(row);
+          });
+        });
+        totalSkippedRows += duplicateRows.size;
+
+        // Process valid completed rows (excluding duplicates)
+        completedRows.forEach(({ row, cells }) => {
+          if (duplicateRows.has(row)) {
+            return;
+          }
+
+          totalProcessedRows++;
+
+          const [cell0, cell1, cell2, cell3] = cells;
+
+          // player 0
+          if (!jsonData[cell0]) jsonData[cell0] = { team: {}, opponent: {} };
+          if (!jsonData[cell0].team[cell1]) jsonData[cell0].team[cell1] = 0;
+          jsonData[cell0].team[cell1]++;
+          [cell2, cell3].forEach(op => {
+            if (!jsonData[cell0].opponent[op]) jsonData[cell0].opponent[op] = 0;
+            jsonData[cell0].opponent[op]++;
+          });
+
+          // player 1
+          if (!jsonData[cell1]) jsonData[cell1] = { team: {}, opponent: {} };
+          if (!jsonData[cell1].team[cell0]) jsonData[cell1].team[cell0] = 0;
+          jsonData[cell1].team[cell0]++;
+          [cell2, cell3].forEach(op => {
+            if (!jsonData[cell1].opponent[op]) jsonData[cell1].opponent[op] = 0;
+            jsonData[cell1].opponent[op]++;
+          });
+
+          // player 2
+          if (!jsonData[cell2]) jsonData[cell2] = { team: {}, opponent: {} };
+          if (!jsonData[cell2].team[cell3]) jsonData[cell2].team[cell3] = 0;
+          jsonData[cell2].team[cell3]++;
+          [cell0, cell1].forEach(op => {
+            if (!jsonData[cell2].opponent[op]) jsonData[cell2].opponent[op] = 0;
+            jsonData[cell2].opponent[op]++;
+          });
+
+          // player 3
+          if (!jsonData[cell3]) jsonData[cell3] = { team: {}, opponent: {} };
+          if (!jsonData[cell3].team[cell2]) jsonData[cell3].team[cell2] = 0;
+          jsonData[cell3].team[cell2]++;
+          [cell0, cell1].forEach(op => {
+            if (!jsonData[cell3].opponent[op]) jsonData[cell3].opponent[op] = 0;
+            jsonData[cell3].opponent[op]++;
+          });
+        });
+      });
+
+      // Sort the top-level keys alphabetically
+      const sortedJsonData = {};
+      Object.keys(jsonData).sort().forEach(key => {
+        sortedJsonData[key] = jsonData[key];
+      });
+
+      return { data: sortedJsonData, processed: totalProcessedRows, skipped: totalSkippedRows };
+    }
+
+    // Submit button
+    submitBtn.addEventListener('click', () => {
+      errorMessage.textContent = '';
+      successMessage.textContent = '';
+      jsonOutput.textContent = '';
+
+      // Clear previous error highlights
+      const allInputs = tablesArea.querySelectorAll('input');
+      allInputs.forEach(input => input.classList.remove('error'));
+
+      const result = generateJSON();
+
+      if (result.skipped > 0) {
+        errorMessage.textContent = `Submission completed with ${result.skipped} skipped row(s) due to duplicates or invalid characters.`;
+      } else {
+        successMessage.textContent = 'Submission successful! All rows are valid.';
+      }
+
+      jsonOutput.textContent = Object.keys(result.data).length > 0
+        ? JSON.stringify(result.data, null, 4)
+        : '{}';
+    });
+
+    // -----------------------------
+    // Player list Save
+    // -----------------------------
+    savePlayersBtn.addEventListener('click', () => {
+      playerErrorMessage.textContent = '';
+      playerSuccessMessage.textContent = '';
+
+      const { players, errors } = parsePlayersFromTextarea(playerListTextarea.value);
+
+      if (errors.length > 0) {
+        playerErrorMessage.textContent = errors.slice(0, 8).join(' | ') + (errors.length > 8 ? ` (+${errors.length - 8} more)` : '');
+        return;
+      }
+
+      savedPlayers = players;
+      savePlayersToStorage(savedPlayers);
+      renderSavedPlayersToTextarea();
+      playerSuccessMessage.textContent = `Saved ${Object.keys(savedPlayers).length} player(s).`;
+
+      updateMissingPlayersForAllTables();
+    });
+
+    // -----------------------------
+    // Add/Remove tables
+    // -----------------------------
+    addTableBtn.addEventListener('click', () => {
+      createTable();
+      updateMissingPlayersForAllTables();
+    });
+
+    removeTableBtn.addEventListener('click', () => {
+      if (tablesArea.children.length > 0) {
+        tablesArea.removeChild(tablesArea.lastChild);
+        updateMissingPlayersForAllTables();
+      }
+    });
+
+    // -----------------------------
+    // On load
+    // -----------------------------
+    window.onload = () => {
+      loadSavedPlayersFromStorage();
+      renderSavedPlayersToTextarea();
+      createTable();
+      updateMissingPlayersForAllTables();
+    };
+  </script>
 </body>
 </html>
